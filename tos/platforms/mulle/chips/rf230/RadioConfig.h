@@ -101,7 +101,7 @@ enum
 
 /* This is the default value of the CHANNEL field of the PHY_CC_CCA register. 11-26*/
 #ifndef RF230_DEF_CHANNEL
-#define RF230_DEF_CHANNEL	11
+#define RF230_DEF_CHANNEL	26
 #endif
 
 /*
@@ -136,6 +136,11 @@ typedef uint16_t tradio_size;
  * The base two logarithm of the number of radio alarm ticks per one millisecond
  */
 #define RADIO_ALARM_MILLI_EXP	11
+
+/**
+ * This sets the number of neighbors the radio stack stores information (like sequence number)
+ */
+#define RF230_NEIGHBORHOOD_SIZE 5
 
 /**
  * Make PACKET_LINK automaticaly enabled for Ieee154MessageC

@@ -53,8 +53,8 @@ typedef struct cc2520_metadata_t
 		uint8_t power;
 	  uint8_t ack;
 		uint8_t rssi;
-	};
-} cc2520_metadata_t;
+	}__attribute__((packed));
+} __attribute__((packed)) cc2520_metadata_t;
 
 enum cc2520_reg_access_enums {
     CC2520_FREG_MASK      = 0x3F,    // highest address in FREG
@@ -243,7 +243,7 @@ typedef union cc2520_adctest2 {
 static cc2520_adctest2_t cc2520_adctest2_default = {.value = 0x03};
 
 #ifndef CC2520_DEF_CHANNEL
-#define CC2520_DEF_CHANNEL 25
+#define CC2520_DEF_CHANNEL 26
 #endif
 
 #ifndef CC2520_DEF_RFPOWER

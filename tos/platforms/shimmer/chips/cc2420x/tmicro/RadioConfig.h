@@ -35,7 +35,7 @@
 
 /* This is the default value of the CHANNEL field of the FSCTRL register. */
 #ifndef CC2420X_DEF_CHANNEL
-#define CC2420X_DEF_CHANNEL	11
+#define CC2420X_DEF_CHANNEL	26
 #endif
 
 /* The number of microseconds a sending micaz mote will wait for an acknowledgement */
@@ -61,5 +61,10 @@ typedef uint16_t tradio_size;
  * The base two logarithm of the number of radio alarm ticks per one millisecond
  */
 #define RADIO_ALARM_MILLI_EXP	10
+
+/**
+ * This sets the number of neighbors the radio stack stores information (like sequence number)
+ */
+#define CC2420X_NEIGHBORHOOD_SIZE 5
 
 #endif//__RADIOCONFIG_H__

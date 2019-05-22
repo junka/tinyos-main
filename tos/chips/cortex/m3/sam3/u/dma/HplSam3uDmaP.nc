@@ -40,8 +40,8 @@ module HplSam3uDmaP {
   provides interface HplSam3uDmaControl as DmaControl;
   provides interface HplSam3uDmaInterrupt as Interrupt;
   uses interface HplNVICInterruptCntl as HDMAInterrupt;
-  uses interface HplSam3uPeripheralClockCntl as HDMAClockControl;
-  uses interface FunctionWrapper as DmacInterruptWrapper;
+  uses interface HplSam3PeripheralClockCntl as HDMAClockControl;
+  uses interface McuSleep;
   uses interface Leds;
 }
 
@@ -76,8 +76,8 @@ implementation {
   }
 
   void DmacIrqHandler() @C() @spontaneous() {
-    call DmacInterruptWrapper.preamble();
+    call McuSleep.irq_preamble();
     signal Interrupt.fired();
-    call DmacInterruptWrapper.postamble();
+    call McuSleep.irq_postamble();
   }
 }

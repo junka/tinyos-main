@@ -31,7 +31,7 @@
  *
  */
 
-#include <6lowpan.h>
+#include <lib6lowpan/6lowpan.h>
 
 configuration TCPEchoC {
 
@@ -43,9 +43,9 @@ configuration TCPEchoC {
   TCPEchoP.Leds -> LedsC;
 
   components new TimerMilliC();
-  components IPDispatchC;
+  components IPStackC;
 
-  TCPEchoP.RadioControl -> IPDispatchC;
+  TCPEchoP.RadioControl -> IPStackC;
   components new UdpSocketC() as Echo,
     new UdpSocketC() as Status;
   TCPEchoP.Echo -> Echo;
@@ -62,15 +62,16 @@ configuration TCPEchoC {
 
   TCPEchoP.StatusTimer -> TimerMilliC;
 
-  components UdpC;
+  components UdpC, IPDispatchC;
 
-  TCPEchoP.IPStats -> IPDispatchC.IPStats;
-  TCPEchoP.RouteStats -> IPDispatchC.RouteStats;
-  TCPEchoP.ICMPStats -> IPDispatchC.ICMPStats;
+  TCPEchoP.IPStats -> IPDispatchC.BlipStatistics;
   TCPEchoP.UDPStats -> UdpC;
 
   components RandomC;
   TCPEchoP.Random -> RandomC;
 
   components UDPShellC;
+
+  components StaticIPAddressTosIdC; // Use TOS_NODE_ID in address
+  //components StaticIPAddressC; // Use LocalIeee154 in address
 }

@@ -1,23 +1,22 @@
 #!/bin/bash
 #
-# Duplicates what is in tools/platforms/msp430/toolchain*
-#
 # BUILD_ROOT is assumed to be the same directory as the build.sh file.
 #
-# set TOSROOT to the head of the tinyos source tree root.
+# set TINYOS_ROOT_DIR to the head of the tinyos source tree root.
 # used to find default PACKAGES_DIR.
 #
 #
 # Env variables used....
 #
-# TOSROOT	head of the tinyos source tree root.  Used for base of default repo
-# PACKAGES_DIR	where packages get stashed.  Defaults to $(TOSROOT)/packages
-# REPO_DEST	Where the repository is being built (no default)
+# TINYOS_ROOT_DIR	head of the tinyos source tree root.  Used for base of default repo
+# PACKAGES_DIR	where packages get stashed.  Defaults to ${BUILD_ROOT}/packages
+# REPO_DEST	Where the repository is being built (${TINYOS_ROOT_DIR}/packaging/repo)
 # DEB_DEST	final home once installed.
 # CODENAME	which part of the repository to place this build in.
 #
 # REPO_DEST	must contain a conf/distributions file for reprepro to work
-#		properly.   One can be copied from $(TOSROOT)/tools/repo/conf.
+#		properly.   Examples of reprepo configuration can be found in
+#               ${TINYOS_ROOT_DIR}/packaging/repo/conf.
 #
 
 COMMON_FUNCTIONS_SCRIPT=../functions-build.sh
@@ -25,7 +24,7 @@ source ${COMMON_FUNCTIONS_SCRIPT}
 
 
 SOURCENAME=tinyos
-SOURCEVERSION=2.1.3
+SOURCEVERSION=2.1.2d
 SOURCEDIRNAME=${SOURCENAME}-${SOURCEVERSION}
 #PACKAGE_RELEASE=1
 PREFIX=/opt
@@ -34,12 +33,12 @@ MAKE="make -j8"
 download()
 {
   mkdir -p ${SOURCEDIRNAME}
-	cp -R ${TOSROOT}/apps ${SOURCEDIRNAME}/apps
-	cp -R ${TOSROOT}/licenses ${SOURCEDIRNAME}/licenses
-	cp -R ${TOSROOT}/support ${SOURCEDIRNAME}/support
-	cp -R ${TOSROOT}/tos ${SOURCEDIRNAME}/tos
-	cp ${TOSROOT}/README.tinyos ${SOURCEDIRNAME}
-	cp ${TOSROOT}/release-notes.txt ${SOURCEDIRNAME}
+	cp -R ${TINYOS_ROOT_DIR}/apps ${SOURCEDIRNAME}/apps
+	cp -R ${TINYOS_ROOT_DIR}/licenses ${SOURCEDIRNAME}/licenses
+	cp -R ${TINYOS_ROOT_DIR}/support ${SOURCEDIRNAME}/support
+	cp -R ${TINYOS_ROOT_DIR}/tos ${SOURCEDIRNAME}/tos
+	cp ${TINYOS_ROOT_DIR}/README.tinyos ${SOURCEDIRNAME}
+	cp ${TINYOS_ROOT_DIR}/release-notes.txt ${SOURCEDIRNAME}
 }
 
 installto()
@@ -93,8 +92,8 @@ case $1 in
     ;;
 
   deb)
-		setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
-		cd ${BUILD_ROOT}
+    setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
+    cd ${BUILD_ROOT}
     download
     cd ${BUILD_ROOT}
     installto
@@ -105,8 +104,8 @@ case $1 in
     ;;
 
   rpm)
-		setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
-		cd ${BUILD_ROOT}
+    setup_package_target ${SOURCENAME} ${SOURCEVERSION} ${PACKAGE_RELEASE}
+    cd ${BUILD_ROOT}
     download
     cd ${BUILD_ROOT}
     installto

@@ -43,4 +43,11 @@ typedef struct ieee_eui64 {
   uint8_t data[IEEE_EUI64_LENGTH];
 } ieee_eui64_t;
 
+#ifdef notdef
+// #ifdef NESC
+typedef nx_struct nx_ieee_eui64 {
+  nx_uint8_t data[IEEE_EUI64_LENGTH];
+} nx_ieee_eui64_t;
+#endif // NESC
+
 #endif // IEEEEUI64_H

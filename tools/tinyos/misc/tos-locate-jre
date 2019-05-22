@@ -75,7 +75,7 @@ case `uname` in
     ## Since we only want to modify this one script for now, stick the
     ## extra subdir at the end, beceuase that's what the reset of scripts
     ## presume. This is a work-around and should be eliminated eventually.
-    xcode_jdk=/Developer/SDKs/${pn}${pv}.sdk/System/Library/Frameworks/JavaVM.framework/Versions/A/Headers
+    xcode_jdk=/System/Library/Frameworks/JavaVM.framework/Versions/Current/Headers
     jhome=/Library/Java/Home
     ;;
 
@@ -149,7 +149,9 @@ if [ "$jni" = "yes" ]; then
 	    jnilocate "$jhome/jre/lib/amd64" || \
 	    jnilocate "$jhome/lib/$arch" || \
 	    jnilocate "$jhome/lib/i386" || \
-	    jnilocate "$jhome/lib/amd64"
+	    jnilocate "$jhome/lib/amd64" || \
+	    jnilocate "$jhome/lib/arm" || \
+	    jnilocate "$jhome/lib"
     fi
 elif [ "$javac" = "yes" ]; then
  if [ `uname` = "Darwin" ];  then

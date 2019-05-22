@@ -65,7 +65,7 @@ enum
 
 /* This is the default value of the CHANNEL field of the PHY_CC_CCA register. */
 #ifndef RFA1_DEF_CHANNEL
-#define RFA1_DEF_CHANNEL	11
+#define RFA1_DEF_CHANNEL	26
 #endif
 
 /* The number of microseconds a sending mote will wait for an acknowledgement */
@@ -88,5 +88,10 @@ typedef uint32_t tradio_size;
  * The base two logarithm of the number of radio alarm ticks per one millisecond
  */
 #define RADIO_ALARM_MILLI_EXP	6
+
+/**
+ * This sets the number of neighbors the radio stack stores information (like sequence number)
+ */
+#define RFA1_NEIGHBORHOOD_SIZE 5
 
 #endif//__RADIOCONFIG_H__

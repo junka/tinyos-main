@@ -17,20 +17,21 @@
 #
 # Env variables used....
 #
-# TOSROOT	head of the tinyos source tree root.  Used for base of default repo
+# TINYOS_ROOT_DIR	head of the tinyos source tree root.  Used for base of default repo
 # PACKAGES_DIR	where packages get stashed.  Defaults to ${BUILD_ROOT}/packages
-# REPO_DEST	Where the repository is being built (defaults to ${TOSROOT}/tools/repo)
+# REPO_DEST	Where the repository is being built (${TINYOS_ROOT_DIR}/packaging/repo)
 # DEB_DEST	final home once installed.
 # CODENAME	which part of the repository to place this build in.
 #
 # REPO_DEST	must contain a conf/distributions file for reprepro to work
-#		properly.   One can be copied from $(TOSROOT)/tools/repo/conf.
+#		properly.   Examples of reprepo configuration can be found in
+#               ${TINYOS_ROOT_DIR}/packaging/repo/conf.
 #
 # Experimental tools go in /opt/msp430-<ver> to avoid conflicting with tools
 # distributed with the major distibutions.
 #
 # 4.6.3 is the msp430 toolchain released with tinyos-2.1.2.   It goes in the
-# /usr heirarchy and is the default toolchain.
+# /usr hierarchy and is the default toolchain.
 #
 # If you don't want any potential problems with the main distibutions, put
 # this toolchain in /opt/msp430-46 and then users need to tweak their PATHS.
@@ -45,10 +46,10 @@ CODENAME=msp430-46
 REL=LTS
 MAKE_J=-j8
 
-if [[ -z "${TOSROOT}" ]]; then
-    TOSROOT=$(pwd)/../../../..
+if [[ -z "${TINYOS_ROOT_DIR}" ]]; then
+    TINYOS_ROOT_DIR=$(pwd)/../../../..
 fi
-echo -e "\n*** TOSROOT: $TOSROOT"
+echo -e "\n*** TINYOS_ROOT_DIR: $TINYOS_ROOT_DIR"
 echo "*** Destination: ${DEB_DEST}"
 
 BINUTILS_VER=2.21.1
@@ -79,7 +80,7 @@ PATCHES="
   msp430mcu-20120406-sf3522088.patch
 "
 
-: ${PREFIX:=${TOSROOT}/local}
+: ${PREFIX:=${TINYOS_ROOT_DIR}/local}
 
 
 setup_deb()
@@ -101,8 +102,8 @@ setup_rpm()
 
 setup_local()
 {
-    mkdir -p ${TOSROOT}/local
-    ${PREFIX:=${TOSROOT}/local}
+    mkdir -p ${TINYOS_ROOT_DIR}/local
+    ${PREFIX:=${TINYOS_ROOT_DIR}/local}
 }
 
 
@@ -272,7 +273,7 @@ package_binutils_deb()
     VER=${BINUTILS_VER}
     LAST_PATCH=$(last_patch msp430-binutils-*.patch)
     DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
-    echo -e "\n***" debian archive: ${BINUTILS}
+    echo -e "\n***" debian archive: ${BINUTILS} \-\> ${PACKAGES_DIR}
     (
 	cd ${BINUTILS}
 	mkdir -p debian/DEBIAN debian/${DEB_DEST}
@@ -331,7 +332,7 @@ package_gcc_deb()
     VER=${GCC_VER}
     LAST_PATCH=$(last_patch msp430-gcc-*.patch)
     DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
-    echo -e "\n***" debian archive: ${GCC}
+    echo -e "\n***" debian archive: ${GCC} \-\> ${PACKAGES_DIR}
     (
 	cd ${GCC}
 	mkdir -p debian/DEBIAN debian/${DEB_DEST}
@@ -391,7 +392,7 @@ package_mcu_deb()
     else
 	DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
     fi
-    echo -e "\n***" debian archive: ${MSP430MCU}
+    echo -e "\n***" debian archive: ${MSP430MCU} \-\> ${PACKAGES_DIR}
     (
 	cd ${MSP430MCU}
 	mkdir -p debian/DEBIAN debian/${DEB_DEST}
@@ -454,7 +455,7 @@ package_libc_deb()
     else
 	DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
     fi
-    echo -e "\n***" debian archive: ${MSP430LIBC}
+    echo -e "\n***" debian archive: ${MSP430LIBC} \-\> ${PACKAGES_DIR}
     (
 	cd ${MSP430LIBC}
 	mkdir -p debian/DEBIAN debian/${DEB_DEST}
@@ -512,7 +513,7 @@ package_gdb_deb()
 	LAST_PATCH=$(last_patch gdb-*.patch)
     fi
     DEB_VER=${VER}-${REL}${MSPGCC_VER}${LAST_PATCH}${POST_VER}
-    echo -e "\n***" debian archive: ${GDB}
+    echo -e "\n***" debian archive: ${GDB} \-\> ${PACKAGES_DIR}
     (
 	cd ${GDB}
 	mkdir -p debian/DEBIAN debian/${DEB_DEST}
@@ -546,7 +547,7 @@ package_gdb_rpm()
 package_dummy_deb()
 {
     set -e
-    echo -e "\n***" debian archive: msp430-46
+    echo -e "\n***" debian archive: msp430-46 \-\> ${PACKAGES_DIR}
     (
 	mkdir -p tinyos
 	cd tinyos
@@ -625,10 +626,19 @@ case $1 in
 	package_dummy_deb
  	;;
 
+    sign)
+        setup_deb
+        if [[ -z "$2" ]]; then
+            dpkg-sig -s builder ${PACKAGES_DIR}/*
+        else
+            dpkg-sig -s builder -k $2 ${PACKAGES_DIR}/*
+        fi
+        ;;
+
     repo)
 	setup_deb
 	if [[ -z "${REPO_DEST}" ]]; then
-	    REPO_DEST=${TOSROOT}/tools/repo
+	    REPO_DEST=${TINYOS_ROOT_DIR}/packaging/repo
 	fi
 	echo -e "\n*** Building Repository: [${CODENAME}] -> ${REPO_DEST}"
 	echo -e   "*** Using packages from ${PACKAGES_DIR}\n"
@@ -664,5 +674,5 @@ case $1 in
 
     *)
 	echo -e "\n./build.sh <target>"
-	echo -e "    local | rpm | deb | repo | clean | veryclean | download"
+	echo -e "    local | rpm | deb | sign | repo | clean | veryclean | download"
 esac

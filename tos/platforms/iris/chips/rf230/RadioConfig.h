@@ -67,7 +67,7 @@ enum
 
 /* This is the default value of the CHANNEL field of the PHY_CC_CCA register. */
 #ifndef RF230_DEF_CHANNEL
-#define RF230_DEF_CHANNEL	11
+#define RF230_DEF_CHANNEL	26
 #endif
 
 /* The number of microseconds a sending IRIS mote will wait for an acknowledgement */
@@ -97,6 +97,11 @@ typedef uint16_t tradio_size;
  * beginning and end to ba able to handle longer wait periods.
  */
 #define RADIO_ALARM_MICROSEC	(73728UL / MHZ / 32) * (1 << MICA_DIVIDE_ONE_FOR_32KHZ_LOG2) / 10000UL
+
+/**
+ * This sets the number of neighbors the radio stack stores information (like sequence number)
+ */
+#define RF230_NEIGHBORHOOD_SIZE 5
 
 /**
  * The base two logarithm of the number of radio alarm ticks per one millisecond

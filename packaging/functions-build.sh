@@ -1,30 +1,29 @@
 #!/bin/bash
 #
-# Duplicates what is in tools/platforms/msp430/toolchain*
-#
 # BUILD_ROOT is assumed to be the same directory as the build.sh file.
 #
-# set TOSROOT to the head of the tinyos source tree root.
+# set TINYOS_ROOT_DIR to the head of the tinyos source tree root.
 # used to find default PACKAGES_DIR.
 #
 #
 # Env variables used....
 #
-# TOSROOT	head of the tinyos source tree root.  Used for base of default repo
-# PACKAGES_DIR	where packages get stashed.  Defaults to $(TOSROOT)/packages
-# REPO_DEST	Where the repository is being built (no default)
+# TINYOS_ROOT_DIR	head of the tinyos source tree root.  Used for base of default repo
+# PACKAGES_DIR	where packages get stashed.  Defaults to ${BUILD_ROOT}/packages
+# REPO_DEST	Where the repository is being built (${TINYOS_ROOT_DIR}/packaging/repo)
 # DEB_DEST	final home once installed.
 # CODENAME	which part of the repository to place this build in.
 #
 # REPO_DEST	must contain a conf/distributions file for reprepro to work
-#		properly.   One can be copied from $(TOSROOT)/tools/repo/conf.
+#		properly.   Examples of reprepo configuration can be found in
+#               ${TINYOS_ROOT_DIR}/packaging/repo/conf.
 #
 
 #default variables: overridable in build.sh
 DATE=`date +%Y%m%d`
 PACKAGE_RELEASE=${DATE}
-if [[ -z "${TOSROOT}" ]]; then
-	TOSROOT=$(pwd)/../..
+if [[ -z "${TINYOS_ROOT_DIR}" ]]; then
+	TINYOS_ROOT_DIR=$(pwd)/../..
 fi
 
 ##parameters: 
@@ -32,9 +31,9 @@ fi
 #$2: package version
 #$3: package release
 setup_package_target(){
-	INSTALLDIR=${BUILD_ROOT}/${1}_${2}-${3}/
+	INSTALLDIR=${BUILD_ROOT}/${1}_${2}-${3}
 	if [[ -z "${PACKAGES_DIR}" ]]; then
-		PACKAGES_DIR=${BUILD_ROOT}
+		PACKAGES_DIR=${BUILD_ROOT}/packages
 	fi
 	echo      "*** Install Directory ${INSTALLDIR}"
 	echo      "*** Debian package Directory ${PACKAGES_DIR}"
@@ -43,7 +42,7 @@ setup_package_target(){
 setup_local_target()
 {
 	if [[ -z "${DESTDIR}" ]]; then
-		INSTALLDIR=${TOSROOT}/local
+		INSTALLDIR=${TINYOS_ROOT_DIR}/local
 	else
 		INSTALLDIR=${DESTDIR}
 	fi

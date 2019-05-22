@@ -380,28 +380,28 @@ implementation
 	{
 //for apps/PPPSniffer
 #ifdef PPPSNIFFER
-	    uint8_t i;
+		uint8_t i;
 #endif
 		// set pin directions
-    	call CSN.makeOutput();
-    	call VREN.makeOutput(); 		
-    	call RSTN.makeOutput(); 		
-    	call CCA.makeInput();
-    	call SFD.makeInput();
-    	call FIFO.makeInput();
-    	call FIFOP.makeInput();    		
+	    	call CSN.makeOutput();
+    		call VREN.makeOutput(); 		
+	    	call RSTN.makeOutput(); 		
+    		call CCA.makeInput();
+	    	call SFD.makeInput();
+    		call FIFO.makeInput();
+	    	call FIFOP.makeInput();    		
 
 		call FifopInterrupt.disable();
 		call SfdCapture.disable();
 
 		// CSN is active low		
-    	call CSN.set();
+	    	call CSN.set();
 
 		// start up voltage regulator
-    	call VREN.set();
-    	call BusyWait.wait( 600 ); // .6ms VR startup time
+    		call VREN.set();
+	    	call BusyWait.wait( 600 ); // .6ms VR startup time
     		
-    	// do a reset
+    		// do a reset
 		call RSTN.clr();
 		call RSTN.set();
     
@@ -432,20 +432,20 @@ implementation
 		cc2420X_iocfg0_t iocfg0;
 		cc2420X_mdmctrl0_t mdmctrl0;
 
-    	// do a reset
+	    	// do a reset
 		call RSTN.clr();
 		call RSTN.set();
 
 		// set up fifop polarity and threshold
 		iocfg0 = cc2420X_iocfg0_default;
 		iocfg0.f.fifop_thr = 127;
-      	writeRegister(CC2420X_IOCFG0, iocfg0.value);
+      		writeRegister(CC2420X_IOCFG0, iocfg0.value);
 		      
 		// set up modem control
 		mdmctrl0 = cc2420X_mdmctrl0_default;
 		mdmctrl0.f.reserved_frame_mode = 1; //accept reserved frames
 		mdmctrl0.f.adr_decode = 0; // disable
-      	writeRegister(CC2420X_MDMCTRL0, mdmctrl0.value);		
+	      	writeRegister(CC2420X_MDMCTRL0, mdmctrl0.value);		
 
 		state = STATE_PD;
 	}
@@ -465,8 +465,6 @@ implementation
 	event void SpiResource.granted()
 	{
 		
-		call CSN.makeOutput();
-		call CSN.set();
 
 		if( state == STATE_VR_ON )
 		{
@@ -484,9 +482,6 @@ implementation
 
 		if( call SpiResource.immediateRequest() == SUCCESS )
 		{
-			call CSN.makeOutput();
-			call CSN.set();
-
 			return TRUE;
 		}
 
@@ -554,7 +549,7 @@ implementation
 			&& state == STATE_PD  && isSpiAcquired() && call RadioAlarm.isFree() )
 		{
 			// start oscillator
-      		strobe(CC2420X_SXOSCON); 
+      			strobe(CC2420X_SXOSCON); 
 
 			call RadioAlarm.wait(PD_2_IDLE_TIME); // .86ms OSC startup time
 			state = STATE_PD_2_IDLE;
@@ -565,7 +560,7 @@ implementation
 			setChannel();
 
 			// start receiving
-      		strobe(CC2420X_SRXON); 
+      			strobe(CC2420X_SRXON); 
 			call RadioAlarm.wait(IDLE_2_RX_ON_TIME); // 12 symbol periods      			
 			state = STATE_IDLE_2_RX_ON;
 		}
@@ -573,17 +568,17 @@ implementation
 			&& state == STATE_RX_ON && isSpiAcquired() )
 		{
 			// disable SFD capture
-      		call SfdCapture.disable();	
+	      		call SfdCapture.disable();	
 
 			// stop receiving
-      		strobe(CC2420X_SRFOFF); 			
+      			strobe(CC2420X_SRFOFF); 			
 			state = STATE_IDLE;
 		}
 
 		if( cmd == CMD_TURNOFF && state == STATE_IDLE  && isSpiAcquired() )
 		{
-      		// stop oscillator
-      		strobe(CC2420X_SXOSCOFF); 
+      			// stop oscillator
+	      		strobe(CC2420X_SXOSCOFF); 
 
 			// do a reset
 			initRadio();
@@ -638,7 +633,7 @@ implementation
 		return SUCCESS;
 	}
 
-	// TODO: turn on SFD capture when turning off radio
+
 	tasklet_async command error_t RadioState.turnOn()
 	{
 		if( cmd != CMD_NONE || (state == STATE_PD && ! call RadioAlarm.isFree()) )
@@ -676,7 +671,6 @@ implementation
 		void* timesync;
 		timesync_relative_t timesync_relative;
 		uint32_t sfdTime;
-		cc2420X_status_t status;
 #ifdef RADIO_DEBUG
 		uint8_t sfd1, sfd2, sfd3, sfd4;
 #endif
@@ -725,20 +719,20 @@ implementation
 #ifdef RADIO_DEBUG
 	        sfd1 = call SFD.get();
 #endif
-			// start transmission
-			status = strobe(CC2420X_STXON);
+		// start transmission
+		strobe(CC2420X_STXON);
 #ifdef RADIO_DEBUG
 	        sfd2 = call SFD.get();
 #endif
-			// get a timestamp right after strobe returns
-			time = call RadioAlarm.getNow();
+		// get a timestamp right after strobe returns
+		time = call RadioAlarm.getNow();
 
-			cmd = CMD_TRANSMIT;			
-			state = STATE_TX_ON;
+		cmd = CMD_TRANSMIT;			
+		state = STATE_TX_ON;
 #ifdef RADIO_DEBUG
 	        sfd3 = call SFD.get();
 #endif
-			call SfdCapture.captureFallingEdge();
+		call SfdCapture.captureFallingEdge();
 #ifdef RADIO_DEBUG
 	        sfd4 = call SFD.get();
 #endif	        
@@ -779,7 +773,7 @@ implementation
 		// adjust for delay between the STXON strobe and the transmission of the SFD
 		time32 += TX_SFD_DELAY;
 
-         call PacketTimeStamp.set(msg, time32);
+	        call PacketTimeStamp.set(msg, time32);
                 
 		if( timesync != 0 ) {
 			// read and adjust the timestamp field
@@ -842,7 +836,7 @@ implementation
 #endif		
 		atomic {
 			// turn off the radio first
-			strobe(CC2420_SRFOFF);
+			strobe(CC2420X_SRFOFF);
 #ifdef RADIO_DEBUG	
 			sfd1 = call SFD.get();
 #endif		
@@ -859,7 +853,7 @@ implementation
 			fifop = call FIFOP.get();
 #endif		
 			// turn the radio back on
-			status = strobe(CC2420_SRXON);
+			status = strobe(CC2420X_SRXON);
 		}
 		RADIO_ASSERT(sfd1 == 0);			
 		RADIO_ASSERT(sfd2 == 0);			

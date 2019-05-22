@@ -33,7 +33,6 @@ module IPForwardingEngineP {
 #ifdef PRINTFUART_ENABLED
     interface Timer<TMilli> as PrintTimer;
 #endif
-    interface Leds;
   }
 } implementation {
 
@@ -121,7 +120,8 @@ module IPForwardingEngineP {
 
     entry->prefixlen = prefix_len_bits;
     entry->ifindex = ifindex;
-    memcpy(&entry->prefix, prefix, prefix_len_bits / 8);
+    if (prefix_len_bits >= 8)
+      memcpy(&entry->prefix, prefix, prefix_len_bits / 8);
     if (next_hop)
       memcpy(&entry->next_hop, next_hop, sizeof(struct in6_addr));
     return entry->key;
@@ -203,7 +203,8 @@ module IPForwardingEngineP {
 
     if (call IPAddress.isLocalAddress(&pkt->ip6_hdr.ip6_dst) &&
         pkt->ip6_hdr.ip6_dst.s6_addr[0] != 0xff) {
-      printf("Forwarding -- send with local unicast address!\n");
+      // printf("Forwarding -- send with local unicast address!\n");
+
       return FAIL;
     } else if (call IPAddress.isLLAddress(&pkt->ip6_hdr.ip6_dst) &&
                (!next_hop_entry || next_hop_entry->prefixlen < 128)) {
@@ -218,9 +219,9 @@ module IPForwardingEngineP {
          addressed don't work on other links...  we should probably do
          ND in this case, or at least keep a cache so we can reply to
          messages on the right interface. */
-      printf("Forwarding -- send to LL address:");
-      printf_in6addr(&pkt->ip6_hdr.ip6_dst);
-      printf("\n");
+      // printf("Forwarding -- send to LL address:");
+      // printf_in6addr(&pkt->ip6_hdr.ip6_dst);
+      // printf("\n");
       pkt->ip6_hdr.ip6_hlim = 1;
       // only do this for unicast packets
       if (pkt->ip6_hdr.ip6_dst.s6_addr[0] != 0xff) {
@@ -229,7 +230,7 @@ module IPForwardingEngineP {
         return call IPForward.send[ROUTE_IFACE_154](&pkt->ip6_hdr.ip6_dst, pkt, NULL);
       }
     } else if (next_hop_entry) {
-      printf("Forwarding -- got from routing table\n");
+      // printf("Forwarding -- got from routing table\n");
 
       /* control messages do not need routing headers */
       if (!(signal ForwardingEvents.initiate[next_hop_entry->ifindex](pkt,
@@ -238,6 +239,12 @@ module IPForwardingEngineP {
 
       return do_send(next_hop_entry->ifindex, &next_hop_entry->next_hop, pkt);
     }
+
+    printf("Forwarding -- no route found for packet. FAIL.\n");
+    printf("Forwarding -- dest addr: ");
+    printf_in6addr(&pkt->ip6_hdr.ip6_dst);
+    printf("\n");
+
     return FAIL;
   }
 
@@ -305,6 +312,15 @@ module IPForwardingEngineP {
       if (!(signal ForwardingEvents.approve[next_hop_ifindex](&pkt, next_hop)))
         return;
 
+      printf("IPForwardingEngineP: Forwarding IPv6 Packet:\n");
+      printf(  "  source:   ");
+      printf_in6addr(&pkt.ip6_hdr.ip6_src);
+      printf("\n  dest:     ");
+      printf_in6addr(&pkt.ip6_hdr.ip6_dst);
+      printf("\n  next hop: ");
+      printf_in6addr(next_hop);
+      printf("\n");
+
       do_send(next_hop_ifindex, next_hop, &pkt);
     }
   }
@@ -314,7 +330,7 @@ module IPForwardingEngineP {
     struct in6_iid *iid = (struct in6_iid *)status->upper_data;
     memset(next.s6_addr, 0, 16);
     next.s6_addr16[0] = htons(0xfe80);
-    printf("sendDone: iface: %i key: %p\n", ifindex, iid);
+    //printf("sendDone: iface: %i key: %p\n", ifindex, iid);
 
     if (iid != NULL) {
       memcpy(&next.s6_addr[8], iid->data, 8);
@@ -325,18 +341,31 @@ module IPForwardingEngineP {
 
 #ifdef PRINTFUART_ENABLED
   event void PrintTimer.fired() {
-    int i;
-    printf("\ndestination                 gateway            interface\n");
+    int i, ctr=0;
+    static char print_buf[44];
+    char* buf;
+    printf("\n#    ");
+    printf("destination                                ");
+    printf("gateway                   ");
+    printf("iface\n");
     for (i = 0; i < ROUTE_TABLE_SZ; i++) {
       if (routing_table[i].valid) {
-        printf_in6addr(&routing_table[i].prefix);
-        printf("/%i\t\t", routing_table[i].prefixlen);
-        printf_in6addr(&routing_table[i].next_hop);
-        printf("\t\t%i\n", routing_table[i].ifindex);
+        buf = print_buf;
+
+        printf("%-5i", ctr++);
+
+        buf += inet_ntop6(&routing_table[i].prefix, print_buf, 44) - 1;
+        sprintf(buf, "/%i", routing_table[i].prefixlen);
+        printf("%-43s", print_buf);
+
+        inet_ntop6(&routing_table[i].next_hop, print_buf, 30);
+        printf("%-26s", print_buf);
+
+        printf("%i\n", routing_table[i].ifindex);
       }
     }
     printf("\n");
-    printfflush();
+    //printfflush();
   }
 #endif
 
@@ -354,10 +383,6 @@ module IPForwardingEngineP {
   default command error_t IPForward.send[uint8_t ifindex](struct in6_addr *next_hop,
                                                           struct ip6_packet *pkt,
                                                           void *data) {
-//     if (ifindex == ROUTE_IFACE_ALL) {
-//       call IPForward.send[ROUTE_IFACE_PPP](next_hop, pkt, data);
-//       call IPForward.send[ROUTE_IFACE_154](next_hop, pkt, data);
-//     }
     return SUCCESS;
   }
 

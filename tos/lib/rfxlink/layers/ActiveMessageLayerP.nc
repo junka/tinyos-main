@@ -46,10 +46,6 @@ generic module ActiveMessageLayerP()
 		interface Receive[am_id_t id];
 		interface Receive as Snoop[am_id_t id];	
 		interface SendNotifier[am_id_t id];
-
-		// for TOSThreads
-		interface Receive as ReceiveDefault[am_id_t id];
-		interface Receive as SnoopDefault[am_id_t id];
 	}
 
 	uses
@@ -127,35 +123,27 @@ implementation
 
 	event message_t* SubReceive.receive(message_t* msg)
 	{
-		am_id_t id = call AMPacket.type(msg);
-		void* payload = getPayload(msg);
-		uint8_t len = call Packet.payloadLength(msg);
+		if( call SubPacket.payloadLength(msg) >= sizeof(activemessage_header_t) )
+		{
+			am_id_t id = call AMPacket.type(msg);
+			void* payload = getPayload(msg);
+			uint8_t len = call Packet.payloadLength(msg);
 
-		msg = call AMPacket.isForMe(msg) 
-			? signal Receive.receive[id](msg, payload, len)
-			: signal Snoop.receive[id](msg, payload, len);
-
+			msg = call AMPacket.isForMe(msg) 
+				? signal Receive.receive[id](msg, payload, len)
+				: signal Snoop.receive[id](msg, payload, len);
+		}
 		return msg;
 	}
 
 	default event message_t* Receive.receive[am_id_t id](message_t* msg, void* payload, uint8_t len)
 	{
-		return signal ReceiveDefault.receive[id](msg, payload, len);;
-	}
-
-	default event message_t* ReceiveDefault.receive[am_id_t id](message_t* msg, void* payload, uint8_t len)
-	{
-		return msg;
+                return msg;
 	}
 
 	default event message_t* Snoop.receive[am_id_t id](message_t* msg, void* payload, uint8_t len)
 	{
-		return signal SnoopDefault.receive[id](msg, payload, len);;
-	}
-
-	default event message_t* SnoopDefault.receive[am_id_t id](message_t* msg, void* payload, uint8_t len)
-	{
-		return msg;
+                return msg;
 	}
 
 /*----------------- AMPacket -----------------*/
@@ -173,7 +161,8 @@ implementation
 	inline command bool AMPacket.isForMe(message_t* msg)
 	{
 		am_addr_t addr = call AMPacket.destination(msg);
-		return addr == call AMPacket.address() || addr == AM_BROADCAST_ADDR;
+		
+		return (addr == AM_BROADCAST_ADDR || addr == call AMPacket.address()) && call AMPacket.group(msg) == call AMPacket.localGroup();
 	}
 
 	inline command am_addr_t AMPacket.destination(message_t* msg)

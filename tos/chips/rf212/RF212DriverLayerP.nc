@@ -291,9 +291,6 @@ implementation
 
 	event void SpiResource.granted()
 	{
-		call SELN.makeOutput();
-		call SELN.set();
-
 		if( state == STATE_P_ON )
 		{
 			initRadio();
@@ -310,9 +307,6 @@ implementation
 
 		if( call SpiResource.immediateRequest() == SUCCESS )
 		{
-			call SELN.makeOutput();
-			call SELN.set();
-
 			return TRUE;
 		}
 
@@ -382,6 +376,8 @@ implementation
 			&& state == STATE_RX_ON && isSpiAcquired() )
 		{
 			call IRQ.disable();
+			radioIrq = FALSE;
+			
 			writeRegister(RF212_TRX_STATE, RF212_FORCE_TRX_OFF);
 			state = STATE_TRX_OFF;
 		}

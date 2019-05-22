@@ -49,11 +49,6 @@ configuration CC2520RadioC
 		interface Receive[am_id_t id];
 		interface Receive as Snoop[am_id_t id];
 		interface SendNotifier[am_id_t id];
-
-		// for TOSThreads
-		interface Receive as ReceiveDefault[am_id_t id];
-		interface Receive as SnoopDefault[am_id_t id];
-
 		interface AMPacket;
 		interface Packet as PacketForActiveMessage;
 #endif
@@ -93,6 +88,15 @@ implementation
 {
 #define UQ_METADATA_FLAGS "UQ_CC2520_METADATA_FLAGS"
 #define UQ_RADIO_ALARM    "UQ_CC2520_RADIO_ALARM"
+#define UQ_NEIGHBORHOOD_FLAG "UQ_CC2520_NEIGHBORHOOD_FLAG"
+
+// -------- TaskleC
+
+	components new TaskletC();
+
+// -------- NeighborhoodC
+
+	components new NeighborhoodC(CC2520_NEIGHBORHOOD_SIZE);
 
 // -------- RadioP
 
@@ -111,6 +115,7 @@ implementation
 
 	components new RadioAlarmC();
 	RadioAlarmC.Alarm -> RadioDriverLayerC;
+	RadioAlarmC.Tasklet -> TaskletC;
 
 // -------- Active Message
 
@@ -127,9 +132,6 @@ implementation
 	SendNotifier = ActiveMessageLayerC;
 	AMPacket = ActiveMessageLayerC;
 	PacketForActiveMessage = ActiveMessageLayerC;
-
-	ReceiveDefault = ActiveMessageLayerC.ReceiveDefault;
-	SnoopDefault = ActiveMessageLayerC.SnoopDefault;
 #endif
 
 // -------- Automatic RadioSend Resource
@@ -170,19 +172,23 @@ implementation
 	components new TinyosNetworkLayerC();
 
 	TinyosNetworkLayerC.SubSend -> UniqueLayerC;
-	TinyosNetworkLayerC.SubReceive -> PacketLinkLayerC;
+	TinyosNetworkLayerC.SubReceive -> Ieee154PacketLayerC;
 	TinyosNetworkLayerC.SubPacket -> Ieee154PacketLayerC;
 
 // -------- IEEE 802.15.4 Packet
 
 	components new Ieee154PacketLayerC();
 	Ieee154PacketLayerC.SubPacket -> PacketLinkLayerC;
+	Ieee154PacketLayerC.SubReceive -> PacketLinkLayerC;
 
 // -------- UniqueLayer Send part (wired twice)
 
-	components new UniqueLayerC();
+	components new UniqueLayerC(CC2520_NEIGHBORHOOD_SIZE);
 	UniqueLayerC.Config -> RadioP;
 	UniqueLayerC.SubSend -> PacketLinkLayerC;
+	UniqueLayerC.Neighborhood -> NeighborhoodC;
+	UniqueLayerC.NeighborhoodFlag -> NeighborhoodC.NeighborhoodFlag[unique(UQ_NEIGHBORHOOD_FLAG)];
+
 
 // -------- Packet Link
 
@@ -224,6 +230,7 @@ implementation
 	MessageBufferLayerC.RadioSend -> CollisionAvoidanceLayerC;
 	MessageBufferLayerC.RadioReceive -> UniqueLayerC;
 	MessageBufferLayerC.RadioState -> TrafficMonitorLayerC;
+	MessageBufferLayerC.Tasklet -> TaskletC;
 	RadioChannel = MessageBufferLayerC;
 
 // -------- UniqueLayer receive part (wired twice)
@@ -312,4 +319,5 @@ implementation
 	RadioDriverLayerC.RSSIFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 	RadioDriverLayerC.TimeSyncFlag -> MetadataFlagsLayerC.PacketFlag[unique(UQ_METADATA_FLAGS)];
 	RadioDriverLayerC.RadioAlarm -> RadioAlarmC.RadioAlarm[unique(UQ_RADIO_ALARM)];
+	RadioDriverLayerC.Tasklet -> TaskletC;
 }

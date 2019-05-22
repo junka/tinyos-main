@@ -47,7 +47,7 @@
 
 /* This is the default value of the CHANNEL field of the FSCTRL register. */
 #ifndef CC2520_DEF_CHANNEL
-#define CC2520_DEF_CHANNEL	11
+#define CC2520_DEF_CHANNEL	26
 #endif
 
 /* The number of microseconds a sending mote will wait for an acknowledgement */
@@ -80,6 +80,11 @@ enum cc2520_timing_enums {
  */
 // FIXME: this needs to be calibrated
 #define RADIO_ALARM_MILLI_EXP	(5)
+
+/**
+ * This sets the number of neighbors the radio stack stores information (like sequence number)
+ */
+#define CC2520_NEIGHBORHOOD_SIZE 5
 
 /**
  * Make PACKET_LINK automaticaly enabled for Ieee154MessageC
